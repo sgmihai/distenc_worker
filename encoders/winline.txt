@@ -1,0 +1,2 @@
+ffmpeg.exe -y -ss 00:15:47.750 -to 00:15:56.500 -i input.mkv -an -sn -pix_fmt yuv420p10le -c:v libaom-av1 -aq-mode 1 -crf 23 -b:v 0 -cpu-used 0 -g -1 -strict -2 -pass 1 -passlogfile logfile -f matroska NUL && ^
+ffmpeg.exe -y -ss 00:15:47.750 -to 00:15:56.500 -i input.mkv -an -sn -pix_fmt yuv420p10le -c:v libaom-av1 -aq-mode 1 -crf 23 -b:v 0 -cpu-used 0 -g -1 -strict -2 -pass 2 -passlogfile logfile output.mkv 
