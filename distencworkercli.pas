@@ -61,7 +61,7 @@ var
   BasePath:String;
   SettingsFile:String;
   CurlPath:String;
-  EncoderPath:String;
+  FFMpegPath,EncoderPath:String;
   Jobs:Array of TJob;
   JobCount:dword=0;
   FQuit:Boolean;
@@ -225,11 +225,13 @@ begin
   OS:=OsVersion;
 
  if OS='LIN' then begin
-   EncoderPath := BasePath+'encoders'+PathDelim+'ffmpeg-git-20191222-amd64-static'+PathDelim+'ffmpeg';
+   FFMpegPath := BasePath+'encoders'+PathDelim+'ffmpeg-git-20200211-amd64-static'+PathDelim+'ffmpeg';
+   EncoderPath :=  BasePath+'encoders'+PathDelim+'ffmpeg-git-20200211-amd64-static'+PathDelim+'aomenc';
    CurlPath := '/bin/curl';
  end
   else if OS='WIN' then begin
-   EncoderPath := BasePath+'encoders'+PathDelim+'ffmpeg-4.3-96152-g4fa2d5a692'+PathDelim+'ffmpeg.exe';
+   FFMpegPath := BasePath+'encoders'+PathDelim+'ffmpeg-4.3-96152-g4fa2d5a692'+PathDelim+'ffmpeg.exe';
+   EncoderPath := BasePath+'encoders'+PathDelim+'ffmpeg-4.3-96152-g4fa2d5a692'+PathDelim+'aomenc.exe';
    CurlPath := BasePath+'curl.exe';
   end;
 
@@ -257,14 +259,20 @@ procedure CreateJob(var msg:tstringlist);
 begin
   inc(JobCount); setLength(Jobs,JobCount);
 
-  msg[6] := StringReplace(msg[6], 'ffmpeg',EncoderPath,[rfReplaceAll]);
+  msg[6] := StringReplace(msg[6], 'ffmpeg',FFmpegPath,[rfReplaceAll]);
+  msg[6] := StringReplace(msg[6], 'aomenc',EncoderPath,[rfReplaceAll]);
  // s:=StringReplace(S,'ffmpeg',EncoderPath,[rfReplaceAll]);
   Jobs[JobCount-1].ProjectID:=msg[1];
   Jobs[JobCount-1].JobID:=msg[2];
   Jobs[JobCount-1].Encoder:=msg[3];
   Jobs[JobCount-1].FrameCount:=msg[4];
   Jobs[JobCount-1].FileName:=msg[5];
-  Jobs[JobCOunt-1].FilePath:=WorkDir+msg[5];
+
+ if not DirectoryExists(WorkDir+msg[1]+msg[2]) then
+   if CreateDir(WorkDir+msg[1]+msg[2]) then SetCurrentDir(WorkDir+msg[1]+msg[2])
+   else else SetCurrentDir(WorkDir+msg[1]+msg[2]);
+
+  Jobs[JobCOunt-1].FilePath:=WorkDir+msg[1]+msg[2]+PathDelim+msg[5];
   Jobs[JobCount-1].WorkerID:=WorkerName;
   Jobs[JobCount-1].UpStarted:=FALSE;
   Jobs[JobCount-1].EncCmd:=msg[6];
@@ -402,13 +410,18 @@ procedure GenerateProgress(const p:dword;const POutput:TSTringList);
  var pr:string;
 begin
   if POutput.Text<>'' then begin
-    writeln('output for ',Jobs[p].FileName,' is:');
-    writeln(Poutput.text);
-  end;
-  if pos('frame=',POutput.Text)>0 then begin
-    pr:=copy(POutput.text,pos('frame=',POutput.Text)+6,6);
-    pr:=trim(pr);
-    if pr<>'' then Jobs[p].Progress:=trunc((strtoint(pr)/strtoint(Jobs[p].FrameCount))*100);
+   // writeln('output for ',Jobs[p].FileName,' is:');
+  //  writeln(Poutput.text);
+   if pos('frame',POutput.Text)>0 then begin
+     pr:=copy(POutput.text,posex('/',POutput.Text,pos('frame',POutput.Text))+1,6);
+     pr:=trim(pr);
+     if pr<>'' then
+      try
+         Jobs[p].Progress:=trunc((strtoint(pr)/strtoint(Jobs[p].FrameCount))*100);
+       except
+        On E : EConvertError do;
+      end;
+   end;
   end;
 end;
 
