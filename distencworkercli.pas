@@ -431,7 +431,7 @@ begin
     TCP.FCon.SendMessage('STATS'+dc+Job.ProjectID+dc+Job.JobID+dc+Job.WorkerID+dc+inttostr(Job.Progress)+dc+Job.UploadURL+dc);
     TCP.FCon.Callaction;
   end;
-end;       
+end;
 
 procedure TLTCPTest.OnDs(aSocket: TLSocket);
 begin
@@ -534,7 +534,7 @@ begin
     for i:=High(jobs) downto low(jobs) do begin
        POutput:=TStringList.Create;
        ReadProcOutput(Jobs[i].EncProcess,POutput);
-       GenerateProgress(i,POutput); //can be moved below the if after debug //ParseOutput to Job[i].Progress;
+       GenerateProgress(i,POutput); //can be moved below the if after debug   //ParseOutput to Job[i].Progress;
        if secondsbetween(Now,Jobs[i].LastUpdate) > StatusIntervalTime then begin
           SendProgress(Jobs[i]);  //Send Job[i].Progress to Server;
           Jobs[i].LastUpdate:=Now;
