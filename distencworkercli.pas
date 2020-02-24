@@ -427,9 +427,11 @@ end;
 
 procedure SendProgress(const Job:TJob);
 begin
-  TCP.FCon.SendMessage('STATS'+dc+Job.ProjectID+dc+Job.JobID+dc+Job.WorkerID+dc+inttostr(Job.Progress)+dc+Job.UploadURL+dc);
-  TCP.FCon.Callaction;
-end;
+  if TCP.FCon.Connected then begin
+    TCP.FCon.SendMessage('STATS'+dc+Job.ProjectID+dc+Job.JobID+dc+Job.WorkerID+dc+inttostr(Job.Progress)+dc+Job.UploadURL+dc);
+    TCP.FCon.Callaction;
+  end;
+end;       
 
 procedure TLTCPTest.OnDs(aSocket: TLSocket);
 begin
